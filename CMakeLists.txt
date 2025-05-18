@@ -19,13 +19,13 @@ endif()
 include_directories(${Boost_INCLUDE_DIRS})
 
 # Add the executable
-add_executable(server server.cpp)
+add_executable(replayserver replayserver.cpp)
 
 # Link against Boost libraries and pthread
-target_link_libraries(server PRIVATE Boost::system Boost::cobalt)
+target_link_libraries(replayserver PRIVATE Boost::system Boost::cobalt)
 
 # Enable warnings and optimizations
-target_compile_options(server PRIVATE -Wall -Wextra -O2)
+target_compile_options(replayserver PRIVATE -Wall -Wextra -O2)
 
 # Optional: Set output directory for the executable
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)

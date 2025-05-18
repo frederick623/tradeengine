@@ -54,30 +54,6 @@ struct Order
 
     }
 
-    static Order from_line(const std::string& line)
-    {
-        std::stringstream ss(line);
-        std::string token;
-
-        std::getline(ss, token, ',');
-        auto exchange_ticker = std::stoi(token);
-        std::getline(ss, token, ',');
-        auto request_type = token[0];
-        if (request_type!='N' and request_type!='A' and request_type!='C') throw std::runtime_error("Invalid request type");
-        std::getline(ss, token, ',');
-        auto order_id = token;
-        std::getline(ss, token, ',');
-        auto side = token[0];
-        std::getline(ss, token, ',');
-        auto quantity = std::stoi(token);
-        if (quantity<=0) throw std::runtime_error("Invalid quantity");
-        std::getline(ss, token, ',');
-        auto price = std::stod(token);
-        if (price<=0) throw std::runtime_error("Invalid price");
-
-        return Order(exchange_ticker, request_type, order_id, side, quantity, price);
-    }
-
 };
 
 template <typename T>

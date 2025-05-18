@@ -9,6 +9,7 @@
 #include <boost/cobalt/task.hpp>
 
 #include "order.hpp"
+#include "channel.hpp"
 
 struct Exchange
 {
@@ -18,14 +19,13 @@ struct Exchange
         ladders_[value.exchange_ticker].add(std::forward<T>(value));
     }
 
-    boost::cobalt::task<void> process(boost::cobalt::channel<std::string>& ch)
+    boost::cobalt::task<void> process(OrderCh& ch)
     {
         while (true) 
         {
-            auto line = co_await ch.read(); // Read line from channel
+            auto order = co_await ch.read(); // Read line from channel
             try
             {
-                auto order = Order::from_line(line);
                 auto iter = ids_.find(order.order_id);
  
                 if (order.request_type=='N')
@@ -41,10 +41,10 @@ struct Exchange
 
                 add<Order>(std::move(order));
             }
-            catch(const std::exception& e)
+            catch(const std::runtime_error& e)
             {
                 // Can add more handling here
-                std::cerr << e.what() << ": " << line << '\n';
+                std::cerr << e.what() << ": " << order << '\n';
             }
         }
         co_return;
