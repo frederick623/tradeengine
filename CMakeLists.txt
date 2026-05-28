@@ -1,31 +1,37 @@
-cmake_minimum_required(VERSION 4.0)
-project(TradeEngine LANGUAGES CXX)
+cmake_minimum_required(VERSION 3.51)
+project(tradeengine CXX)
 
-# Set C++ standard to C++20
-set(CMAKE_BUILD_TYPE Debug) 
 set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_STANDARD_REQUIRED YES)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++20")
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
-# Find Boost (version 1.85 or higher for Cobalt)
-find_package(Boost 1.86 REQUIRED COMPONENTS system cobalt)
-
-# Check if Boost was found
-if(NOT Boost_FOUND)
-    message(FATAL_ERROR "Boost 1.85 or higher is required. Please set BOOST_ROOT to your Boost installation directory.")
+if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE Release)
 endif()
 
-# Include Boost headers
-include_directories(${Boost_INCLUDE_DIRS})
+add_compile_options(-Wall -Wextra -Wno-unused-parameter)
 
-# Add the executable
-add_executable(replayserver replayserver.cpp)
+# Boost (Cobalt + Asio). Cobalt requires linking the compiled library.
+set(Boost_USE_STATIC_LIBS ON)
+set(BUILD_SHARED_LIBS OFF)
 
-# Link against Boost libraries and pthread
-target_link_libraries(replayserver PRIVATE Boost::system Boost::cobalt)
+cmake_policy(SET CMP0167 NEW)
+find_package(Boost REQUIRED COMPONENTS cobalt)
 
-# Enable warnings and optimizations
-target_compile_options(replayserver PRIVATE -Wall -Wextra -O2)
+add_subdirectory(thirdparty)
 
-# Optional: Set output directory for the executable
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+add_executable(tradeengine
+    src/engine.cpp
+)
+target_include_directories(tradeengine PRIVATE src src/hkex)
+target_link_libraries(tradeengine
+    PRIVATE
+        nanolog
+        orderbook
+        mpmcqueue
+        Boost::cobalt
+)
+
+if(APPLE)
+    target_link_libraries(tradeengine PRIVATE "-framework CoreFoundation")
+endif()
