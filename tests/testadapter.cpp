@@ -134,7 +134,7 @@ TEST(HkexAdapter, ParsesSeriesAndAddOrder) {
     EXPECT_EQ(counter.orders, 1);
     EXPECT_EQ(registry.instrumentCount(), 1u);
 
-    const auto* def = registry.getByHkexOBID(12345);
+    const auto* def = hkex.lookup(12345, registry);
     ASSERT_NE(def, nullptr);
     EXPECT_EQ(def->key.exchange, mde::Exchange::HKEX);
     EXPECT_EQ(def->key.symbol, "MHI25000C5");
@@ -158,7 +158,7 @@ TEST(TseAdapter, ParsesIssueAddAndExecution) {
     EXPECT_EQ(counter.trades, 1);
     EXPECT_EQ(registry.instrumentCount(), 1u);
 
-    const auto* def = registry.getByTseCode(8697);
+    const auto* def = tse.lookup(8697, registry);
     ASSERT_NE(def, nullptr);
     EXPECT_EQ(def->key.exchange, mde::Exchange::TSE);
     EXPECT_EQ(def->kind, mde::InstrumentKind::EQUITY);

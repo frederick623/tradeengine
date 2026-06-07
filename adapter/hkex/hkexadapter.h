@@ -10,6 +10,7 @@
 #include "omddmessages.h"
 #include "hkexmarketdata.h"
 #include "NanoLog.hpp"
+#include "config.h"
 
 #include <unordered_map>
 #include <string>
@@ -27,6 +28,14 @@ public:
 
     Exchange    exchangeID() const { return Exchange::HKEX; }
     const char* name()       const { return "HKEX-OMD-D"; }
+
+    // Look up an instrument by orderbookID in any registry that provides
+    // getByInstrumentKey().  The adapter owns the orderbookID → symbol mapping,
+    // so this is the correct place for the lookup rather than the registry.
+    template<class Registry>
+    const InstrumentDef* lookup(uint32_t orderbookID, const Registry& reg) const {
+        return reg.getByInstrumentKey(makeKey(orderbookID));
+    }
 
     // ── CRTP entry points ──────────────────────────────────────────────────
     bool processPacketImpl(const uint8_t* data, uint16_t len) {
@@ -288,8 +297,7 @@ private:
         d.isSuspended       = (s.seriesStatus == 2);
         d.effectiveTomorrow = s.effectiveTomorrow;
         d.contractSize      = s.contractSize;
-        d.hkexOrderbookID   = s.orderbookID;
-        d.hkexCommodityCode = s.commodityCode;
+        d.numericCode       = static_cast<uint32_t>(s.commodityCode);
         d.receivedAt        = nsNow();
 
         uint16_t strikeDec = 0;
@@ -459,5 +467,9 @@ private:
     std::unordered_map<uint32_t, std::vector<HkexComboLeg>> comboLegs_;
     OrderBookMap<>                                         books_;
 };
+
+// ── AdapterFor trait specialisation ──────────────────────────────────────────
+template<class Handler>
+struct AdapterFor<Exchange::HKEX, Handler> { using type = HkexAdapter<Handler>; };
 
 } // namespace mde

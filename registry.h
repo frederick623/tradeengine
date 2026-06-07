@@ -30,7 +30,6 @@ public:
     void onInstrumentDef(const InstrumentDef& def) {
         std::lock_guard<std::mutex> lk(mu_);
         instruments_[def.key] = def;
-        if (def.hkexOrderbookID) nativeIndex_[def.hkexOrderbookID] = def.key;
     }
 
     void onStrategyDef(const StrategyDef& def) {
@@ -39,18 +38,10 @@ public:
     }
 
     // Lookups
-    const InstrumentDef* get(const InstrumentKey& k) const {
+    const InstrumentDef* getByInstrumentKey(const InstrumentKey& k) const {
         std::lock_guard<std::mutex> lk(mu_);
         auto it = instruments_.find(k);
         return (it != instruments_.end()) ? &it->second : nullptr;
-    }
-
-    const InstrumentDef* getByOrderbookID(uint32_t obid) const {
-        std::lock_guard<std::mutex> lk(mu_);
-        auto it = nativeIndex_.find(obid);
-        if (it == nativeIndex_.end()) return nullptr;
-        auto it2 = instruments_.find(it->second);
-        return (it2 != instruments_.end()) ? &it2->second : nullptr;
     }
 
     size_t instrumentCount() const {
@@ -66,14 +57,12 @@ public:
         std::lock_guard<std::mutex> lk(mu_);
         instruments_.clear();
         strategies_.clear();
-        nativeIndex_.clear();
     }
 
 private:
     mutable std::mutex mu_;
     std::unordered_map<InstrumentKey, InstrumentDef,  InstrumentKeyHash> instruments_;
     std::unordered_map<InstrumentKey, StrategyDef,    InstrumentKeyHash> strategies_;
-    std::unordered_map<uint32_t,      InstrumentKey>                     nativeIndex_;
 };
 
 // ─────────────────────────────────────────────────────────────────────────────

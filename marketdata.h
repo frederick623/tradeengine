@@ -156,10 +156,10 @@ struct InstrumentDef {
     bool            isTradable{true};
     bool            isSuspended{false};
 
-    // Exchange-specific raw numeric ids (for fast lookup by adapters)
-    uint32_t        hkexOrderbookID{0};
-    uint16_t        hkexCommodityCode{0};
-    uint32_t        tseIssueCode{0};
+    // Secondary numeric group code, exchange-agnostic.
+    // HKEX: commodity code (groups series under one underlying).
+    // TSE:  sector / product-type code when available.
+    uint32_t        numericCode{0};
 
     NsTimestamp     receivedAt{0};
 };

@@ -11,6 +11,7 @@
 #include "orderbook.h"
 #include "tsemarketdata.h"
 #include "NanoLog.hpp"
+#include "config.h"
 
 #include <unordered_map>
 #include <string>
@@ -27,6 +28,16 @@ public:
 
     Exchange    exchangeID() const { return Exchange::TSE; }
     const char* name()       const { return "TSE-Arrowhead-MBO"; }
+
+    // Look up an instrument by the TSE numeric issue code in any registry that
+    // provides getByInstrumentKey().  The adapter owns the nativeID → issueCode
+    // string mapping, so the lookup lives here rather than in the registry.
+    template<class Registry>
+    const InstrumentDef* lookup(uint32_t nativeID, const Registry& reg) const {
+        auto it = nativeIDIndex_.find(nativeID);
+        if (it == nativeIDIndex_.end()) return nullptr;
+        return reg.getByInstrumentKey(makeKey(it->second));
+    }
 
     bool processPacketImpl(const uint8_t* data, uint16_t len) {
         if (len < sizeof(TsePktHeader)) return false;
@@ -72,6 +83,7 @@ public:
 
     void resetImpl() {
         issues_.clear();
+        nativeIDIndex_.clear();
         lastMatch_.clear();
         currentTimeSec_ = 0;
         books_.clear();
@@ -142,7 +154,7 @@ private:
         d.kind          = InstrumentKind::EQUITY;  // default; II tag refines this
         d.currency      = "JPY";
         d.priceDecimals = 4;
-        d.tseIssueCode  = d.key.nativeID;
+        nativeIDIndex_[d.key.nativeID] = issueCode;
         d.receivedAt    = nsNow();
         this->emitInstrument(d);
         return issues_.emplace(issueCode, c).first->second;
@@ -313,10 +325,15 @@ private:
 
     // ── Internal state ───────────────────────────────────────────────────────
     std::unordered_map<std::string, TseIssueCache> issues_;
+    std::unordered_map<uint32_t,    std::string>   nativeIDIndex_; // nativeID → issueCode string
     uint32_t currentTimeSec_{0};
     struct MatchCtx { uint32_t matchID{}; uint64_t lastPrice{}; };
     std::unordered_map<std::string, MatchCtx> lastMatch_;
     OrderBookMap<> books_;
 };
+
+// ── AdapterFor trait specialisation ──────────────────────────────────────────
+template<class Handler>
+struct AdapterFor<Exchange::TSE, Handler> { using type = TseAdapter<Handler>; };
 
 } // namespace mde
