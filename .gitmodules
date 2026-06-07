@@ -1,0 +1,9 @@
+[submodule "thirdparty/MPMCSimpleQueue"]
+	path = thirdparty/MPMCSimpleQueue
+	url = https://github.com/frederick623/MPMCSimpleQueue
+[submodule "thirdparty/fastorderbook"]
+	path = thirdparty/fastorderbook
+	url = https://github.com/frederick623/fastorderbook
+[submodule "thirdparty/NanoLog"]
+	path = thirdparty/NanoLog
+	url = https://github.com/frederick623/NanoLog

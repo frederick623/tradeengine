@@ -1,4 +1,10 @@
 .vscode/
 .DS_Store
 build/
+log/
 .idea/
+CMakeFiles
+*.cmake
+Makefile
+cmake-build-debug/
+_deps/

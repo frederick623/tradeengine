@@ -11,27 +11,86 @@ endif()
 
 add_compile_options(-Wall -Wextra -Wno-unused-parameter)
 
-# Boost (Cobalt + Asio). Cobalt requires linking the compiled library.
-set(Boost_USE_STATIC_LIBS ON)
-set(BUILD_SHARED_LIBS OFF)
-
-cmake_policy(SET CMP0167 NEW)
-find_package(Boost REQUIRED COMPONENTS cobalt)
-
 add_subdirectory(thirdparty)
 
+# ── Optional dependencies for the live / replay packet sources ───────────────
+#  libpcap is required for pcap replay; Boost.Asio (header-only) enables the
+#  live UDP / multicast connector when present.
+find_path(PCAP_INCLUDE_DIR pcap.h)
+find_library(PCAP_LIBRARY NAMES pcap)
+if(NOT PCAP_LIBRARY)
+    message(FATAL_ERROR "libpcap not found — install it (e.g. brew install libpcap)")
+endif()
+
+find_package(Boost QUIET)
+
+# ── Feed-handler executable ──────────────────────────────────────────────────
+#  Header-only CRTP adapters live under adapter/; the common model and the
+#  registry live at the repo root.  main.cpp drives the HKEX adapter from a
+#  UDP / file / pcap packet source under feed/.
 add_executable(tradeengine
-    src/engine.cpp
+    main.cpp
 )
-target_include_directories(tradeengine PRIVATE src src/hkex)
+target_include_directories(tradeengine
+    PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}
+        ${CMAKE_CURRENT_SOURCE_DIR}/adapter
+        ${PCAP_INCLUDE_DIR}
+)
 target_link_libraries(tradeengine
     PRIVATE
         nanolog
         orderbook
         mpmcqueue
-        Boost::cobalt
+        ${PCAP_LIBRARY}
 )
+
+if(Boost_FOUND)
+    target_compile_definitions(tradeengine PRIVATE TRADEENGINE_HAVE_BOOST_ASIO)
+    target_include_directories(tradeengine PRIVATE ${Boost_INCLUDE_DIRS})
+    if(TARGET Boost::boost)
+        target_link_libraries(tradeengine PRIVATE Boost::boost)
+    endif()
+    message(STATUS "Boost found — live UDP source enabled")
+else()
+    message(STATUS "Boost not found — live UDP source disabled (file/pcap only)")
+endif()
 
 if(APPLE)
     target_link_libraries(tradeengine PRIVATE "-framework CoreFoundation")
 endif()
+
+# ── Unit tests (GoogleTest via FetchContent) ─────────────────────────────────
+include(FetchContent)
+FetchContent_Declare(
+    googletest
+    GIT_REPOSITORY https://github.com/google/googletest.git
+    GIT_TAG        v1.15.2
+)
+set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+FetchContent_MakeAvailable(googletest)
+
+enable_testing()
+
+add_executable(testadapter
+    tests/testadapter.cpp
+)
+target_include_directories(testadapter
+    PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}
+        ${CMAKE_CURRENT_SOURCE_DIR}/adapter
+)
+target_link_libraries(testadapter
+    PRIVATE
+        nanolog
+        orderbook
+        mpmcqueue
+        GTest::gtest
+)
+
+if(APPLE)
+    target_link_libraries(testadapter PRIVATE "-framework CoreFoundation")
+endif()
+
+include(GoogleTest)
+gtest_discover_tests(testadapter)
