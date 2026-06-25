@@ -1,6 +1,6 @@
 # tradeengine
 
-A high-performance, header-only C++20 market-data feed handler for **HKEX OMD-D** and **TSE Arrowhead FLEX MBO** exchange protocols. Raw UDP packets are decoded, normalised into an exchange-agnostic event model, and fanned out to downstream handlers — all with zero virtual dispatch.
+A high-performance C++20 market-data feed handler for **HKEX OMD-D** and **TSE Arrowhead FLEX MBO** exchange protocols. Raw UDP packets are decoded, normalised into an exchange-agnostic event model, and fanned out to downstream handlers — all with zero virtual dispatch.
 
 ---
 
