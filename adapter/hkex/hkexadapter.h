@@ -465,7 +465,7 @@ private:
     std::unordered_map<uint32_t, HkexSeriesCache>          series_;
     std::unordered_map<std::string, uint32_t>              symbolToOBID_;
     std::unordered_map<uint32_t, std::vector<HkexComboLeg>> comboLegs_;
-    OrderBookMap<>                                         books_;
+    OrderBookMap                                           books_;
 };
 
 // ── AdapterFor trait specialisation ──────────────────────────────────────────

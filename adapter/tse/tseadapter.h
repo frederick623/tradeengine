@@ -329,7 +329,7 @@ private:
     uint32_t currentTimeSec_{0};
     struct MatchCtx { uint32_t matchID{}; uint64_t lastPrice{}; };
     std::unordered_map<std::string, MatchCtx> lastMatch_;
-    OrderBookMap<> books_;
+    OrderBookMap   books_;
 };
 
 // ── AdapterFor trait specialisation ──────────────────────────────────────────
