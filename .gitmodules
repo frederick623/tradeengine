@@ -7,3 +7,6 @@
 [submodule "thirdparty/NanoLog"]
 	path = thirdparty/NanoLog
 	url = https://github.com/frederick623/NanoLog
+[submodule "thirdparty/xdpaeron"]
+	path = thirdparty/xdpaeron
+	url = https://github.com/frederick623/xdpaeron

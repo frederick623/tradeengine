@@ -37,6 +37,8 @@ TextFileSource
 |---------|---------|-------|
 | **libpcap** | pcap/pcapng replay | Required |
 | **Boost.Asio** | Live UDP / multicast | Optional; file & pcap modes work without it |
+| **Aeron C++ client** | IPC feed transport | Optional; enables Aeron source and XDP relayer |
+| **libxdp + libbpf** | AF_XDP kernel-bypass capture | Optional; needed for `xdp_udp_relayer` on Linux |
 | **NanoLog** | Low-latency structured logging | Bundled (`thirdparty/NanoLog`) |
 | **fastorderbook** | Cache-friendly price-level order book | Bundled (`thirdparty/fastorderbook`) |
 | **MPMCSimpleQueue** | Lock-free multi-producer/consumer queue | Bundled (`thirdparty/MPMCSimpleQueue`) |
@@ -54,12 +56,24 @@ cmake -B build -DCMAKE_BUILD_TYPE=Release
 cmake --build build -j$(nproc)
 ```
 
-The build produces two targets:
+The build produces these targets:
 
 | Target | Description |
 |--------|-------------|
 | `tradeengine` | Feed-handler executable |
 | `testadapter` | GoogleTest unit-test binary |
+| `xdp_udp_relayer` | Linux-only AF_XDP → Aeron IPC relayer (built only when dependencies are found) |
+
+---
+
+`thirdparty/xdpaeron` also supports standalone configure/build:
+
+```bash
+cmake -S thirdparty/xdpaeron -B build/xdpaeron
+cmake --build build/xdpaeron
+```
+
+In the main build, `tradeengine` consumes Aeron IPC via the `xdpaeron::ipc` target.
 
 ---
 
@@ -114,7 +128,8 @@ tradeengine/
 ├── thirdparty/
 │   ├── NanoLog/          # Low-latency logging
 │   ├── fastorderbook/    # Price-level order book
-│   └── MPMCSimpleQueue/  # Lock-free MPMC queue
+│   ├── MPMCSimpleQueue/  # Lock-free MPMC queue
+│   └── xdpaeron/         # XDP+Aeron module (Linux relayer + IPC headers)
 ├── tests/
 │   └── testadapter.cpp   # GoogleTest suite
 └── CMakeLists.txt

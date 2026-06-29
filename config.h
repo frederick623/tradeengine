@@ -9,6 +9,7 @@
 //    -DMDE_EXCHANGE_TSE             TSE adapter (default: HKEX)
 //    -DMDE_FEED_UDP                 live UDP / multicast
 //    -DMDE_FEED_TEXTFILE            hex text-file replay
+//    -DMDE_FEED_AERON               Aeron IPC stream source
 //    (no flag)                      pcap replay  ← default
 //
 //  Connection parameters (feed-mode specific; unused modes are ignored)
@@ -18,6 +19,8 @@
 //    -DMDE_UDP_ADDR=\"239.1.2.3\"
 //    -DMDE_UDP_PORT=50000
 //    -DMDE_UDP_IFACE=\"eth0\"
+//    -DMDE_AERON_CHANNEL=\"aeron:ipc\"
+//    -DMDE_AERON_STREAM_ID=1001
 //
 //  Usage in main.cpp:
 //    mde::AdapterFor_t<kExchange, decltype(fanout)> adapter(fanout);
@@ -34,6 +37,7 @@ enum class FeedMode : uint8_t {
     UDP      = 0,   ///< live UDP / multicast (Boost.Asio)
     PCAP     = 1,   ///< pcap / pcapng capture replay
     TEXTFILE = 2,   ///< hex text-file replay (one packet per line)
+    AERON    = 3,   ///< Aeron IPC stream source
 };
 
 // ── Active exchange ───────────────────────────────────────────────────────────
@@ -48,6 +52,8 @@ inline constexpr Exchange kExchange = Exchange::HKEX;   // default
 inline constexpr FeedMode kFeedMode = FeedMode::UDP;
 #elif defined(MDE_FEED_TEXTFILE)
 inline constexpr FeedMode kFeedMode = FeedMode::TEXTFILE;
+#elif defined(MDE_FEED_AERON)
+inline constexpr FeedMode kFeedMode = FeedMode::AERON;
 #else
 inline constexpr FeedMode kFeedMode = FeedMode::PCAP;   // default
 #endif
@@ -81,6 +87,16 @@ inline constexpr std::string_view kFilePath = MDE_FILE_PATH;
 inline constexpr std::string_view kUdpAddr  = MDE_UDP_ADDR;
 inline constexpr uint16_t         kUdpPort  = MDE_UDP_PORT;
 inline constexpr std::string_view kUdpIface = MDE_UDP_IFACE;
+
+// ── Aeron IPC parameters ───────────────────────────────────────────────────────
+#ifndef MDE_AERON_CHANNEL
+#  define MDE_AERON_CHANNEL "aeron:ipc"
+#endif
+#ifndef MDE_AERON_STREAM_ID
+#  define MDE_AERON_STREAM_ID 1001
+#endif
+inline constexpr std::string_view kAeronChannel  = MDE_AERON_CHANNEL;
+inline constexpr int32_t          kAeronStreamId = MDE_AERON_STREAM_ID;
 
 // ── Exchange → Adapter trait ──────────────────────────────────────────────────
 //  Primary template – intentionally left undefined.

@@ -20,6 +20,7 @@
 #include "config.h"
 #include "registry.h"
 #include "logginghandler.h"
+#include "thirdparty/xdpaeron/aeron.h"
 #include "feed/textfile.h"
 #include "feed/pcap.h"
 #include "feed/udp.h"
@@ -63,6 +64,11 @@ int main() {
     } else if constexpr (kFeedMode == FeedMode::TEXTFILE) {
         return runFeed<kExchange>(
             mde::feed::TextFileSource(std::string(mde::kFilePath)));
+
+    } else if constexpr (kFeedMode == FeedMode::AERON) {
+        return runFeed<kExchange>(
+            mde::feed::AeronIpcSource(std::string(mde::kAeronChannel),
+                                      mde::kAeronStreamId));
 
     } else {
         // FeedMode::UDP
