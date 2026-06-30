@@ -22,7 +22,9 @@
 #include "logginghandler.h"
 #include "thirdparty/xdpaeron/aeron.h"
 #include "feed/textfile.h"
+#ifdef TRADEENGINE_HAVE_PCAP
 #include "feed/pcap.h"
+#endif
 #include "feed/udp.h"
 #include "NanoLog.hpp"
 
@@ -56,14 +58,16 @@ int main() {
     // Low-latency logging → ./log/tradeengine.<n>.txt
     nanolog::initialize(nanolog::GuaranteedLogger(), "./log/", "tradeengine", 8);
 
-    if constexpr (kFeedMode == FeedMode::PCAP) {
+    if constexpr (kFeedMode == FeedMode::TEXTFILE) {
+        return runFeed<kExchange>(
+            mde::feed::TextFileSource(std::string(mde::kFilePath)));
+
+#ifdef TRADEENGINE_HAVE_PCAP
+    } else if constexpr (kFeedMode == FeedMode::PCAP) {
         return runFeed<kExchange>(
             mde::feed::PcapSource(std::string(mde::kPcapPath),
                                   mde::kPcapPortFilter));
-
-    } else if constexpr (kFeedMode == FeedMode::TEXTFILE) {
-        return runFeed<kExchange>(
-            mde::feed::TextFileSource(std::string(mde::kFilePath)));
+#endif
 
     } else if constexpr (kFeedMode == FeedMode::AERON) {
         return runFeed<kExchange>(
