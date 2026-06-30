@@ -35,8 +35,8 @@ TextFileSource
 
 | Library | Purpose | Notes |
 |---------|---------|-------|
-| **libpcap** | pcap/pcapng replay | Required |
-| **Boost.Asio** | Live UDP / multicast | Optional; file & pcap modes work without it |
+| **libpcap** | pcap/pcapng replay | Optional; enables pcap replay mode |
+| **Boost.Asio** | Live UDP / multicast | Optional; file mode works without it |
 | **Aeron C++ client** | IPC feed transport | Optional; enables Aeron source and XDP relayer |
 | **libxdp + libbpf** | AF_XDP kernel-bypass capture | Optional; needed for `xdp_udp_relayer` on Linux |
 | **NanoLog** | Low-latency structured logging | Bundled (`thirdparty/NanoLog`) |
@@ -50,7 +50,9 @@ TextFileSource
 
 ```bash
 # Prerequisites (macOS example)
-brew install libpcap boost
+# libpcap is optional but recommended for pcap replay
+brew install boost
+# Optional: brew install libpcap
 
 cmake -B build -DCMAKE_BUILD_TYPE=Release
 cmake --build build -j$(nproc)

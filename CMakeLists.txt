@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.51)
+cmake_minimum_required(VERSION 3.15)
 project(tradeengine CXX)
 
 set(CMAKE_CXX_STANDARD 20)
@@ -14,13 +14,10 @@ add_compile_options(-Wall -Wextra -Wno-unused-parameter)
 add_subdirectory(thirdparty)
 
 # ── Optional dependencies for the live / replay packet sources ───────────────
-#  libpcap is required for pcap replay; Boost.Asio (header-only) enables the
+#  libpcap is optional for pcap replay; Boost.Asio (header-only) enables the
 #  live UDP / multicast connector when present.
 find_path(PCAP_INCLUDE_DIR pcap.h)
 find_library(PCAP_LIBRARY NAMES pcap)
-if(NOT PCAP_LIBRARY)
-    message(FATAL_ERROR "libpcap not found — install it (e.g. brew install libpcap)")
-endif()
 
 find_package(Boost QUIET)
 
@@ -35,7 +32,6 @@ target_include_directories(tradeengine
     PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}
         ${CMAKE_CURRENT_SOURCE_DIR}/adapter
-        ${PCAP_INCLUDE_DIR}
 )
 target_link_libraries(tradeengine
     PRIVATE
@@ -43,8 +39,16 @@ target_link_libraries(tradeengine
         orderbook
         mpmcqueue
         xdpaeron::ipc
-        ${PCAP_LIBRARY}
 )
+
+if(PCAP_LIBRARY)
+    target_compile_definitions(tradeengine PRIVATE TRADEENGINE_HAVE_PCAP)
+    target_include_directories(tradeengine PRIVATE ${PCAP_INCLUDE_DIR})
+    target_link_libraries(tradeengine PRIVATE ${PCAP_LIBRARY})
+    message(STATUS "libpcap found — pcap replay enabled")
+else()
+    message(STATUS "libpcap not found — pcap replay disabled (file/udp only)")
+endif()
 
 if(Boost_FOUND)
     target_compile_definitions(tradeengine PRIVATE TRADEENGINE_HAVE_BOOST_ASIO)

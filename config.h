@@ -8,9 +8,9 @@
 //  Exchange / feed mode
 //    -DMDE_EXCHANGE_TSE             TSE adapter (default: HKEX)
 //    -DMDE_FEED_UDP                 live UDP / multicast
-//    -DMDE_FEED_TEXTFILE            hex text-file replay
+//    -DMDE_FEED_PCAP                pcap / pcapng replay
 //    -DMDE_FEED_AERON               Aeron IPC stream source
-//    (no flag)                      pcap replay  ← default
+//    (no flag)                      hex text-file replay  ← default
 //
 //  Connection parameters (feed-mode specific; unused modes are ignored)
 //    -DMDE_PCAP_PATH=\"file.pcap\"
@@ -50,12 +50,12 @@ inline constexpr Exchange kExchange = Exchange::HKEX;   // default
 // ── Active feed mode ──────────────────────────────────────────────────────────
 #if defined(MDE_FEED_UDP)
 inline constexpr FeedMode kFeedMode = FeedMode::UDP;
-#elif defined(MDE_FEED_TEXTFILE)
-inline constexpr FeedMode kFeedMode = FeedMode::TEXTFILE;
+#elif defined(MDE_FEED_PCAP)
+inline constexpr FeedMode kFeedMode = FeedMode::PCAP;
 #elif defined(MDE_FEED_AERON)
 inline constexpr FeedMode kFeedMode = FeedMode::AERON;
 #else
-inline constexpr FeedMode kFeedMode = FeedMode::PCAP;   // default
+inline constexpr FeedMode kFeedMode = FeedMode::TEXTFILE;   // default
 #endif
 
 // ── PCAP parameters ───────────────────────────────────────────────────────────

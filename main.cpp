@@ -22,8 +22,12 @@
 #include "logginghandler.h"
 #include "thirdparty/xdpaeron/aeron.h"
 #include "feed/textfile.h"
+#ifdef TRADEENGINE_HAVE_PCAP
 #include "feed/pcap.h"
+#endif
+#ifdef TRADEENGINE_HAVE_BOOST_ASIO
 #include "feed/udp.h"
+#endif
 #include "NanoLog.hpp"
 
 using mde::kExchange;
@@ -56,25 +60,36 @@ int main() {
     // Low-latency logging → ./log/tradeengine.<n>.txt
     nanolog::initialize(nanolog::GuaranteedLogger(), "./log/", "tradeengine", 8);
 
-    if constexpr (kFeedMode == FeedMode::PCAP) {
+    if constexpr (kFeedMode == FeedMode::TEXTFILE) {
+        return runFeed<kExchange>(
+            mde::feed::TextFileSource(std::string(mde::kFilePath)));
+    }
+    else if constexpr (kFeedMode == FeedMode::PCAP) {
+#ifdef TRADEENGINE_HAVE_PCAP
         return runFeed<kExchange>(
             mde::feed::PcapSource(std::string(mde::kPcapPath),
                                   mde::kPcapPortFilter));
-
-    } else if constexpr (kFeedMode == FeedMode::TEXTFILE) {
-        return runFeed<kExchange>(
-            mde::feed::TextFileSource(std::string(mde::kFilePath)));
-
-    } else if constexpr (kFeedMode == FeedMode::AERON) {
+#else
+        std::cerr << "[ERROR] PCAP mode requires libpcap (not found at build time)\n";
+        std::cerr << "[ERROR] Rebuild with -DMDE_FEED_TEXTFILE or install libpcap\n";
+        return 1;
+#endif
+    }
+    else if constexpr (kFeedMode == FeedMode::AERON) {
         return runFeed<kExchange>(
             mde::feed::AeronIpcSource(std::string(mde::kAeronChannel),
                                       mde::kAeronStreamId));
-
-    } else {
-        // FeedMode::UDP
+    }
+    else if constexpr (kFeedMode == FeedMode::UDP) {
+#ifdef TRADEENGINE_HAVE_BOOST_ASIO
         return runFeed<kExchange>(
             mde::feed::UdpSource(std::string(mde::kUdpAddr),
                                  mde::kUdpPort,
                                  std::string(mde::kUdpIface)));
+#else
+        std::cerr << "[ERROR] UDP mode requires Boost.Asio (not found at build time)\n";
+        std::cerr << "[ERROR] Rebuild with -DMDE_FEED_TEXTFILE or install Boost\n";
+        return 1;
+#endif
     }
 }
