@@ -25,7 +25,9 @@
 #ifdef TRADEENGINE_HAVE_PCAP
 #include "feed/pcap.h"
 #endif
+#ifdef TRADEENGINE_HAVE_BOOST_ASIO
 #include "feed/udp.h"
+#endif
 #include "NanoLog.hpp"
 
 using mde::kExchange;
@@ -74,11 +76,17 @@ int main() {
             mde::feed::AeronIpcSource(std::string(mde::kAeronChannel),
                                       mde::kAeronStreamId));
 
+#ifdef TRADEENGINE_HAVE_BOOST_ASIO
     } else {
         // FeedMode::UDP
         return runFeed<kExchange>(
             mde::feed::UdpSource(std::string(mde::kUdpAddr),
                                  mde::kUdpPort,
                                  std::string(mde::kUdpIface)));
+#else
+    } else {
+        std::cerr << "[ERROR] UDP mode requires Boost.Asio (not found at build time)\n";
+        return 1;
+#endif
     }
 }

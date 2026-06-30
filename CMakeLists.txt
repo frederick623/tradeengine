@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.51)
+cmake_minimum_required(VERSION 3.15)
 project(tradeengine CXX)
 
 set(CMAKE_CXX_STANDARD 20)
