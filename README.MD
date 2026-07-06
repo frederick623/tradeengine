@@ -68,14 +68,14 @@ The build produces these targets:
 
 ---
 
-`thirdparty/xdpaeron` also supports standalone configure/build:
+`thirdparty/xdpio` also supports standalone configure/build:
 
 ```bash
-cmake -S thirdparty/xdpaeron -B build/xdpaeron
-cmake --build build/xdpaeron
+cmake -S thirdparty/xdpio -B build/xdpio
+cmake --build build/xdpio
 ```
 
-In the main build, `tradeengine` consumes Aeron IPC via the `xdpaeron::ipc` target.
+In the main build, `tradeengine` consumes Aeron IPC via the `xdpio::ipc` target.
 
 ---
 
@@ -131,7 +131,7 @@ tradeengine/
 │   ├── NanoLog/          # Low-latency logging
 │   ├── fastorderbook/    # Price-level order book
 │   ├── MPMCSimpleQueue/  # Lock-free MPMC queue
-│   └── xdpaeron/         # XDP+Aeron module (Linux relayer + IPC headers)
+│   └── xdpio/         # XDP+Aeron module (Linux relayer + IPC headers)
 ├── tests/
 │   └── testadapter.cpp   # GoogleTest suite
 └── CMakeLists.txt

@@ -20,7 +20,7 @@
 #include "config.h"
 #include "registry.h"
 #include "logginghandler.h"
-#include "thirdparty/xdpaeron/aeron.h"
+#include "thirdparty/xdpio/aeron.h"
 #include "feed/textfile.h"
 #ifdef TRADEENGINE_HAVE_PCAP
 #include "feed/pcap.h"

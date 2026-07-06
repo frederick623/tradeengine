@@ -38,7 +38,7 @@ target_link_libraries(tradeengine
         nanolog
         orderbook
         mpmcqueue
-        xdpaeron::ipc
+        xdpio::ipc
 )
 
 if(PCAP_LIBRARY)
