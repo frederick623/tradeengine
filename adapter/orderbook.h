@@ -22,9 +22,9 @@
 namespace mde {
 
 // Global defaults used when no per-instrument params have been registered.
-constexpr uint32_t kBookMaxPrice      = 100000;    // max price value (pre-scale)
-constexpr uint32_t kBookScaleFactor   = 1000;      // double → integer tick multiplier
-constexpr uint32_t kBookPoolCap       = 1'000'000;
+constexpr uint32_t kBookMaxPrice      = 10000;    // max price value (pre-scale)
+constexpr uint32_t kBookScaleFactor   = 10;        // compact fallback precision
+constexpr uint32_t kBookPoolCap       = 10000;
 // lastPrice is multiplied by this to derive the per-book price ceiling.
 constexpr double   kBookPriceHeadroom = 5.0;
 

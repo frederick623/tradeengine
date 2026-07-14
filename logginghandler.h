@@ -1,69 +1,72 @@
 #pragma once
 // ─────────────────────────────────────────────────────────────────────────────
-//  logginghandler.h  –  compile-time Handler that prints normalised events
+//  logginghandler.h  –  compile-time Handler that logs normalised events
 //
-//  A ready-made MarketDataHandler that streams every event to stdout.  Useful
+//  A ready-made MarketDataHandler that writes every event through NanoLog. Useful
 //  as a demo sink for the live feed handler and for visibility inside tests.
 // ─────────────────────────────────────────────────────────────────────────────
 #include "marketdata.h"
-#include <iostream>
+#include "NanoLog.hpp"
+#include <string>
 
 class LoggingHandler : public mde::HandlerDefaults {
 public:
     void onControl(const mde::ControlEvent& e) {
-        std::cout << "[CTRL] exch=" << exchName(e.exchange)
-                  << " kind=" << kindName(e.kind) << "\n";
+        LOG_INFO << "[CTRL] exch=" << exchName(e.exchange)
+                 << " kind=" << kindName(e.kind);
     }
 
     void onInstrumentDef(const mde::InstrumentDef& d) {
-        std::cout << "[INSTR] exch=" << exchName(d.key.exchange)
-                  << " sym=" << d.key.symbol
-                  << " kind=" << kindName(d.kind)
-                  << " ccy=" << d.currency
-                  << " exp=" << d.expirationDate
-                  << " dec=" << (int)d.priceDecimals
-                  << (d.isSuspended ? " [SUSP]" : "")
-                  << "\n";
+        LOG_INFO << "[INSTR] exch=" << exchName(d.key.exchange)
+                 << " sym=" << d.key.symbol
+                 << " kind=" << kindName(d.kind)
+                 << " ccy=" << d.currency
+                 << " exp=" << d.expirationDate
+                 << " dec=" << static_cast<uint32_t>(d.priceDecimals)
+                 << (d.isSuspended ? " [SUSP]" : "");
     }
 
     void onStrategyDef(const mde::StrategyDef& s) {
-        std::cout << "[STRAT] sym=" << s.key.symbol
-                  << " legs=" << s.legs.size() << " {";
-        for (auto& l : s.legs)
-            std::cout << l.instrument.symbol
-                      << (l.legSide == mde::StrategyLegSide::AS_DEFINED ? "+" : "-")
-                      << "x" << l.ratio << " ";
-        std::cout << "}\n";
+        std::string legs;
+        for (const auto& l : s.legs) {
+            legs += l.instrument.symbol;
+            legs += (l.legSide == mde::StrategyLegSide::AS_DEFINED ? "+" : "-");
+            legs += "x";
+            legs += std::to_string(l.ratio);
+            legs += " ";
+        }
+        LOG_INFO << "[STRAT] sym=" << s.key.symbol
+                 << " legs=" << static_cast<uint64_t>(s.legs.size())
+                 << " {" << legs << "}";
     }
 
     void onMarketState(const mde::MarketStateEvent& e) {
-        std::cout << "[STATE] exch=" << exchName(e.exchange)
-                  << " sym=" << e.instrument.symbol
-                  << " state=" << stateName(e.state)
-                  << " detail=" << e.stateDetail
-                  << (e.isEndOfDay ? " [EOD]" : "") << "\n";
+        LOG_INFO << "[STATE] exch=" << exchName(e.exchange)
+                 << " sym=" << e.instrument.symbol
+                 << " state=" << stateName(e.state)
+                 << " detail=" << e.stateDetail
+                 << (e.isEndOfDay ? " [EOD]" : "");
     }
 
     void onOrderEvent(const mde::OrderEvent& e) {
-        std::cout << "[ORDER] exch=" << exchName(e.exchange)
-                  << " sym=" << e.instrument.symbol
-                  << " " << kindName(e.kind)
-                  << " oid=" << e.orderID
-                  << " " << (e.side == mde::Side::BID ? "BID" : "ASK")
-                  << " px=" << e.price.toDouble()
-                  << " qty=" << e.quantity;
-        if (e.bookPosition) std::cout << " pos=" << e.bookPosition;
-        std::cout << "\n";
+        LOG_INFO << "[ORDER] exch=" << exchName(e.exchange)
+                 << " sym=" << e.instrument.symbol
+                 << " " << kindName(e.kind)
+                 << " oid=" << static_cast<uint64_t>(e.orderID)
+                 << " " << (e.side == mde::Side::BID ? "BID" : "ASK")
+                 << " px=" << e.price.toDouble()
+                 << " qty=" << static_cast<uint64_t>(e.quantity)
+                 << (e.bookPosition ? " pos=" + std::to_string(e.bookPosition) : "");
     }
 
     void onTrade(const mde::TradeEvent& e) {
-        std::cout << "[TRADE] exch=" << exchName(e.exchange)
-                  << " sym=" << e.instrument.symbol
-                  << " " << kindName(e.kind)
-                  << " tid=" << e.tradeID
-                  << " px=" << e.price.toDouble()
-                  << " qty=" << e.quantity
-                  << (e.isPrintable ? "" : " [no-print]") << "\n";
+        LOG_INFO << "[TRADE] exch=" << exchName(e.exchange)
+                 << " sym=" << e.instrument.symbol
+                 << " " << kindName(e.kind)
+                 << " tid=" << static_cast<uint64_t>(e.tradeID)
+                 << " px=" << e.price.toDouble()
+                 << " qty=" << static_cast<uint64_t>(e.quantity)
+                 << (e.isPrintable ? "" : " [no-print]");
     }
 
 private:

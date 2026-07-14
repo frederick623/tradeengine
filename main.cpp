@@ -57,8 +57,9 @@ static int runFeed(Source&& source) {
 //  main  –  construct the compile-time–configured source and run
 // ─────────────────────────────────────────────────────────────────────────────
 int main() {
-    // Low-latency logging → ./log/tradeengine.<n>.txt
-    nanolog::initialize(nanolog::GuaranteedLogger(), "./log/", "tradeengine", 8);
+    // Bounded async logging: prevents unbounded memory growth when INFO volume
+    // exceeds disk write throughput.
+    nanolog::initialize(nanolog::NonGuaranteedLogger(64), "./log/", "tradeengine", 8);
 
     if constexpr (kFeedMode == FeedMode::TEXTFILE) {
         return runFeed<kExchange>(
@@ -77,7 +78,7 @@ int main() {
     }
     else if constexpr (kFeedMode == FeedMode::AERON) {
         return runFeed<kExchange>(
-            mde::feed::AeronIpcSource(std::string(mde::kAeronChannel),
+            AeronIpcSource(std::string(mde::kAeronChannel),
                                       mde::kAeronStreamId));
     }
     else if constexpr (kFeedMode == FeedMode::UDP) {

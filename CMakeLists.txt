@@ -99,3 +99,9 @@ endif()
 
 include(GoogleTest)
 gtest_discover_tests(testadapter)
+
+target_compile_definitions(tradeengine PRIVATE
+        MDE_EXCHANGE_TSE
+        MDE_FEED_PCAP
+        MDE_PCAP_PATH=\"${CMAKE_CURRENT_SOURCE_DIR}/20241105_051.test.pcap\"
+)
