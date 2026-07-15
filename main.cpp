@@ -14,8 +14,15 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 #include <cstdint>
+#include <charconv>
+#include <chrono>
+#include <filesystem>
+#include <iomanip>
 #include <iostream>
+#include <sstream>
 #include <string>
+#include <thread>
+#include <atomic>
 
 #include "config.h"
 #include "registry.h"
@@ -34,6 +41,115 @@ using mde::kExchange;
 using mde::kFeedMode;
 using mde::FeedMode;
 using mde::Exchange;
+
+namespace {
+
+constexpr std::string_view kLogDirectory = "./log/";
+constexpr std::string_view kLogSourcePrefix = "tradeengine_";
+
+std::tm localTime(std::time_t timestamp) {
+    std::tm tm{};
+#if defined(_WIN32)
+    localtime_s(&tm, &timestamp);
+#else
+    localtime_r(&timestamp, &tm);
+#endif
+    return tm;
+}
+
+std::string formatProgramStart(std::chrono::system_clock::time_point startedAt) {
+    const auto time = std::chrono::system_clock::to_time_t(startedAt);
+    const auto tm = localTime(time);
+
+    std::ostringstream out;
+    out << std::put_time(&tm, "%Y%m%d%H%M%S");
+    return out.str();
+}
+
+std::string formatLogIndex(uint32_t index) {
+    std::ostringstream out;
+    out << std::setw(3) << std::setfill('0') << index;
+    return out.str();
+}
+
+class LogFileRenamer {
+public:
+    LogFileRenamer(std::filesystem::path logDirectory,
+                   std::string sourceBaseName,
+                   std::string targetTimestamp)
+        : logDirectory_(std::move(logDirectory))
+        , sourceBaseName_(std::move(sourceBaseName))
+        , targetTimestamp_(std::move(targetTimestamp))
+        , worker_([this] { run(); }) {}
+
+    ~LogFileRenamer() {
+        stop_.store(true, std::memory_order_relaxed);
+        if (worker_.joinable()) {
+            worker_.join();
+        }
+        renameReadyFiles();
+    }
+
+private:
+    void run() {
+        while (!stop_.load(std::memory_order_relaxed)) {
+            renameReadyFiles();
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        }
+    }
+
+    void renameReadyFiles() const {
+        std::error_code ec;
+        if (!std::filesystem::exists(logDirectory_, ec)) {
+            return;
+        }
+
+        const std::string prefix = sourceBaseName_ + ".";
+
+        for (const auto& entry : std::filesystem::directory_iterator(logDirectory_, ec)) {
+            if (ec || !entry.is_regular_file(ec)) {
+                continue;
+            }
+
+            const std::string fileName = entry.path().filename().string();
+            if (!fileName.starts_with(prefix) || !fileName.ends_with(".txt")) {
+                continue;
+            }
+
+            const auto indexStart = prefix.size();
+            const auto indexLength = fileName.size() - indexStart - 4;
+            if (indexLength == 0) {
+                continue;
+            }
+
+            uint32_t fileIndex = 0;
+            const auto* begin = fileName.data() + static_cast<std::ptrdiff_t>(indexStart);
+            const auto* end = begin + static_cast<std::ptrdiff_t>(indexLength);
+            const auto parseResult = std::from_chars(begin, end, fileIndex);
+            if (parseResult.ec != std::errc{} || parseResult.ptr != end) {
+                continue;
+            }
+
+            const auto targetPath =
+                logDirectory_ / (targetTimestamp_ + "_" + formatLogIndex(fileIndex) + ".txt");
+
+            if (entry.path() == targetPath || std::filesystem::exists(targetPath, ec)) {
+                continue;
+            }
+
+            std::filesystem::rename(entry.path(), targetPath, ec);
+            ec.clear();
+        }
+    }
+
+    std::filesystem::path logDirectory_;
+    std::string sourceBaseName_;
+    std::string targetTimestamp_;
+    std::atomic<bool> stop_{false};
+    std::thread worker_;
+};
+
+}  // namespace
 
 // Build the compile-time–selected adapter + downstream handlers and pump source.
 template<Exchange Exch, class Source>
@@ -64,7 +180,17 @@ static int runFeed(Source&& source) {
 int main() {
     // Bounded async logging: prevents unbounded memory growth when INFO volume
     // exceeds disk write throughput.
-    nanolog::initialize(nanolog::NonGuaranteedLogger(64), "./log/", "tradeengine", 8);
+    const auto programStartedAt = std::chrono::system_clock::now();
+    const auto logTimestamp = formatProgramStart(programStartedAt);
+    const auto logSourceBaseName = std::string(kLogSourcePrefix) + logTimestamp;
+    std::filesystem::create_directories(kLogDirectory);
+    nanolog::initialize(nanolog::NonGuaranteedLogger(64),
+                        std::string(kLogDirectory),
+                        logSourceBaseName,
+                        8);
+    LogFileRenamer logFileRenamer(std::filesystem::path(kLogDirectory),
+                                  logSourceBaseName,
+                                  logTimestamp);
 
     if constexpr (kFeedMode == FeedMode::TEXTFILE) {
         return runFeed<kExchange>(
