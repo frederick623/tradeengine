@@ -48,6 +48,11 @@ static int runFeed(Source&& source) {
         adapter.processPacket(data, len);
     });
 
+    LOG_INFO << "[BOOK] dumping "
+             << static_cast<uint64_t>(adapter.liveOrderBookCount())
+             << " orderbooks before shutdown";
+    adapter.dumpOrderBooks(logger);
+
     std::cout << "[INFO] registry: " << registry.instrumentCount()
               << " instruments, " << registry.strategyCount() << " strategies\n";
     return 0;

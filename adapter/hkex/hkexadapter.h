@@ -37,6 +37,9 @@ public:
         return reg.getByInstrumentKey(makeKey(orderbookID));
     }
 
+    const OrderBookMap& orderBooks() const { return books_; }
+    InstrumentKey bookInstrumentKey(uint32_t nativeID) const { return makeKey(nativeID); }
+
     // ── CRTP entry points ──────────────────────────────────────────────────
     bool processPacketImpl(const uint8_t* data, uint16_t len) {
         if (len < sizeof(PktHeader)) return false;

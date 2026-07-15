@@ -39,6 +39,17 @@ public:
         return reg.getByInstrumentKey(makeKey(it->second));
     }
 
+    const OrderBookMap& orderBooks() const { return books_; }
+    InstrumentKey bookInstrumentKey(uint32_t nativeID) const {
+        auto it = nativeIDIndex_.find(nativeID);
+        if (it != nativeIDIndex_.end()) return makeKey(it->second);
+        InstrumentKey k;
+        k.exchange = Exchange::TSE;
+        k.nativeID = nativeID;
+        k.symbol = std::to_string(nativeID);
+        return k;
+    }
+
     bool processPacketImpl(const uint8_t* data, uint16_t len) {
         if (len < sizeof(TsePktHeader)) return false;
 

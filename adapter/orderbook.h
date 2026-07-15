@@ -68,6 +68,15 @@ public:
 
     void clear() { books_.clear(); }
 
+    size_t liveBookCount() const { return books_.size(); }
+
+    template<class Fn>
+    void forEachBook(Fn&& fn) const {
+        for (const auto& [nativeID, book] : books_) {
+            fn(nativeID, *book);
+        }
+    }
+
     // Lazily-created book for an instrument (by exchange-native id).
     // Uses per-instrument params if registered, else global defaults.
     Book& book(uint32_t nativeID) {

@@ -13,6 +13,7 @@
 //  It does NOT own networking; the caller feeds raw bytes via processPacket().
 // ─────────────────────────────────────────────────────────────────────────────
 #include "marketdata.h"
+#include <cstddef>
 #include <cstdint>
 
 namespace mde {
@@ -31,6 +32,17 @@ public:
     // Called by the framework when a sequence / channel reset is detected so the
     // adapter can clear its internal state.
     void reset() { derived().resetImpl(); }
+
+    size_t liveOrderBookCount() const {
+        return derived().orderBooks().liveBookCount();
+    }
+
+    template<class Logger>
+    void dumpOrderBooks(Logger& logger) const {
+        derived().orderBooks().forEachBook([&](uint32_t nativeID, const auto& book) {
+            logger.logOrderBookSnapshot(derived().bookInstrumentKey(nativeID), book);
+        });
+    }
 
 protected:
     Handler& handler_;  // compile-time callback, never null

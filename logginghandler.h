@@ -6,6 +6,7 @@
 //  as a demo sink for the live feed handler and for visibility inside tests.
 // ─────────────────────────────────────────────────────────────────────────────
 #include "marketdata.h"
+#include "adapter/orderbook.h"
 #include "NanoLog.hpp"
 #include <string>
 
@@ -67,6 +68,22 @@ public:
                  << " px=" << e.price.toDouble()
                  << " qty=" << static_cast<uint64_t>(e.quantity)
                  << (e.isPrintable ? "" : " [no-print]");
+    }
+
+    void logOrderBookSnapshot(const mde::InstrumentKey& k,
+                              const mde::OrderBookMap::Book& book) {
+        const auto bid = book.bestBid();
+        const auto ask = book.bestAsk();
+        LOG_INFO << "[BOOK] exch=" << exchName(k.exchange)
+                 << " sym=" << k.symbol
+                 << " nid=" << static_cast<uint64_t>(k.nativeID)
+                 << " bid=" << (bid ? bid->value() : 0.0)
+                 << " ask=" << (ask ? ask->value() : 0.0)
+                 << " bidDepth5=" << static_cast<uint64_t>(book.marketDepth(::Side::Buy, 5))
+                 << " askDepth5=" << static_cast<uint64_t>(book.marketDepth(::Side::Sell, 5))
+                 << " liveOrders=" << static_cast<uint64_t>(book.poolUsed())
+                 << (bid ? "" : " [NO_BID]")
+                 << (ask ? "" : " [NO_ASK]");
     }
 
 private:
