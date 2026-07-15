@@ -14,6 +14,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 #include <cstdint>
+#include <ctime>
 #include <charconv>
 #include <chrono>
 #include <filesystem>
@@ -21,6 +22,7 @@
 #include <iostream>
 #include <sstream>
 #include <string>
+#include <string_view>
 #include <thread>
 #include <atomic>
 
@@ -108,6 +110,7 @@ private:
 
         for (const auto& entry : std::filesystem::directory_iterator(logDirectory_, ec)) {
             if (ec || !entry.is_regular_file(ec)) {
+                ec.clear();
                 continue;
             }
 
@@ -134,6 +137,7 @@ private:
                 logDirectory_ / (targetTimestamp_ + "_" + formatLogIndex(fileIndex) + ".txt");
 
             if (entry.path() == targetPath || std::filesystem::exists(targetPath, ec)) {
+                ec.clear();
                 continue;
             }
 
@@ -183,7 +187,7 @@ int main() {
     const auto programStartedAt = std::chrono::system_clock::now();
     const auto logTimestamp = formatProgramStart(programStartedAt);
     const auto logSourceBaseName = std::string(kLogSourcePrefix) + logTimestamp;
-    std::filesystem::create_directories(kLogDirectory);
+    std::filesystem::create_directories(std::filesystem::path(kLogDirectory));
     nanolog::initialize(nanolog::NonGuaranteedLogger(64),
                         std::string(kLogDirectory),
                         logSourceBaseName,
