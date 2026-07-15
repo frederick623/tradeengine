@@ -92,7 +92,7 @@ In the main build, `tradeengine` consumes Aeron IPC via the `xdpio::ipc` target.
 ./build/tradeengine file <path>
 ```
 
-Logs are written to `./log/YYYYMMDDhhmmss_001.txt`, `./log/YYYYMMDDhhmmss_002.txt`, and so on, using the program start time for the timestamp prefix.
+Logs are written to names like `./log/20260715143000_001.txt`, `./log/20260715143000_002.txt`, and so on, using the program start time for the timestamp prefix.
 
 ---
 

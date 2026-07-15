@@ -48,6 +48,7 @@ namespace {
 
 constexpr std::string_view kLogDirectory = "./log/";
 constexpr std::string_view kLogSourcePrefix = "tradeengine_";
+constexpr auto kLogRenamePollInterval = std::chrono::seconds(1);
 
 std::tm localTime(std::time_t timestamp) {
     std::tm tm{};
@@ -96,7 +97,7 @@ private:
     void run() {
         while (!stop_.load(std::memory_order_relaxed)) {
             renameReadyFiles();
-            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            std::this_thread::sleep_for(kLogRenamePollInterval);
         }
     }
 
