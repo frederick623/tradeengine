@@ -15,6 +15,7 @@
 #include "adapter/tse/tseadapter.h"
 #include "registry.h"
 #include "logginghandler.h"
+#include "strategy.h"
 #include "NanoLog.hpp"
 
 namespace {
@@ -117,6 +118,14 @@ struct CountingHandler : mde::HandlerDefaults {
     void onControl      (const mde::ControlEvent&)    { ++controls; }
 };
 
+struct TestStrategy : mde::Strategy {
+    int prices{0};
+    int orderStates{0};
+
+    void onMarketPrice(const mde::MarketPriceEvent&) override { ++prices; }
+    void onOrderStateChange(const mde::BrokerOrderStateEvent&) override { ++orderStates; }
+};
+
 } // namespace
 
 // ── HKEX ─────────────────────────────────────────────────────────────────────
@@ -179,6 +188,30 @@ TEST(FanoutHandler, BroadcastsToAllHandlers) {
     // Both handlers saw the instrument definition.
     EXPECT_EQ(counter.instruments, 1);
     EXPECT_EQ(registry.instrumentCount(), 1u);
+}
+
+TEST(StrategyDispatcher, PublishesMarketPricesAndBrokerOrderStates) {
+    mde::StrategyDispatcher dispatcher;
+    TestStrategy strategy;
+    dispatcher.add(strategy);
+
+    mde::OrderEvent order;
+    order.kind = mde::OrderEventKind::ADD;
+    order.instrument.symbol = "TEST";
+    order.price = {12345, 2};
+    order.quantity = 10;
+    dispatcher.onOrderEvent(order);
+
+    mde::TradeEvent trade;
+    trade.instrument.symbol = "TEST";
+    trade.price = {12350, 2};
+    trade.quantity = 5;
+    dispatcher.onTrade(trade);
+
+    dispatcher.publishOrderState({.orderID = "broker-1", .status = "2"});
+
+    EXPECT_EQ(strategy.prices, 2);
+    EXPECT_EQ(strategy.orderStates, 1);
 }
 
 int main(int argc, char** argv) {

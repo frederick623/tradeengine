@@ -10,6 +10,6 @@
 [submodule "thirdparty/xdpio"]
 	path = thirdparty/xdpio
 	url = https://github.com/frederick623/xdpio
-[submodule "thirdparty/xdpio"]
-	path = thirdparty/xdpio
-	url = https://github.com/frederick623/xdpio/
+[submodule "thirdparty/fixer"]
+	path = thirdparty/fixer
+	url = https://github.com/frederick623/fixer

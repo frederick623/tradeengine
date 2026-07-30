@@ -42,6 +42,7 @@ TextFileSource
 | **NanoLog** | Low-latency structured logging | Bundled (`thirdparty/NanoLog`) |
 | **fastorderbook** | Cache-friendly price-level order book | Bundled (`thirdparty/fastorderbook`) |
 | **MPMCSimpleQueue** | Lock-free multi-producer/consumer queue | Bundled (`thirdparty/MPMCSimpleQueue`) |
+| **fixer** | FIX TCP transport and order-message primitives | Bundled (`thirdparty/fixer`) |
 | **GoogleTest** | Unit tests | Fetched automatically via CMake `FetchContent` |
 
 ---
@@ -106,6 +107,18 @@ ctest --output-on-failure
 ```
 
 Tests feed synthetic wire packets through both adapters and assert that normalised events land correctly in the `InstrumentRegistry` via a compile-time `FanoutHandler`.
+
+## Broker and strategy APIs
+
+Configure an optional FIX 4.4 broker TCP connection at build time:
+
+```bash
+cmake -B build -DCMAKE_CXX_FLAGS='-DMDE_BROKER_HOST=\"127.0.0.1\" -DMDE_BROKER_PORT=9876'
+```
+
+`mde::BrokerClient::submit()` accepts an `mde::ManualOrder` and forwards broker execution reports to every registered `mde::Strategy`. Derive from `mde::Strategy` and override `onMarketPrice()` to react to order-book updates and trades, or `onOrderStateChange()` to react to broker execution reports. Register strategies through `mde::StrategyDispatcher::add()` before running the feed.
+
+The bundled `fixer` library provides transport and message primitives only. Production integrations must add the broker-specific FIX session workflow, including authentication, logon, sequence numbers, and required identifiers, before submitting orders.
 
 ---
 
