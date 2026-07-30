@@ -110,7 +110,7 @@ Tests feed synthetic wire packets through both adapters and assert that normalis
 
 ## Broker and strategy APIs
 
-Configure an optional FIX 4.4 broker TCP connection at build time:
+Configure an optional FIX 4.4 broker TCP connection at build time (requires Boost.System):
 
 ```bash
 cmake -B build -DCMAKE_CXX_FLAGS='-DMDE_BROKER_HOST=\"127.0.0.1\" -DMDE_BROKER_PORT=9876'

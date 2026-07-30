@@ -17,7 +17,7 @@ add_compile_options(-Wall -Wextra -Wno-unused-parameter)
 find_path(PCAP_INCLUDE_DIR pcap.h)
 find_library(PCAP_LIBRARY NAMES pcap)
 
-find_package(Boost 1.74 REQUIRED COMPONENTS system)
+find_package(Boost 1.74 QUIET COMPONENTS system)
 
 add_subdirectory(thirdparty)
 
@@ -39,7 +39,6 @@ target_link_libraries(tradeengine
         orderbook
         mpmcqueue
         xdpio::ipc
-        fixer
 )
 
 if(PCAP_LIBRARY)
@@ -54,6 +53,7 @@ endif()
 if(Boost_FOUND)
     target_compile_definitions(tradeengine PRIVATE TRADEENGINE_HAVE_BOOST_ASIO TRADEENGINE_HAVE_FIXER)
     target_include_directories(tradeengine PRIVATE ${Boost_INCLUDE_DIRS})
+    target_link_libraries(tradeengine PRIVATE fixer)
     if(TARGET Boost::boost)
         target_link_libraries(tradeengine PRIVATE Boost::boost)
     endif()
