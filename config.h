@@ -21,8 +21,8 @@
 //    -DMDE_UDP_IFACE=\"eth0\"
 //    -DMDE_AERON_CHANNEL=\"aeron:ipc\"
 //    -DMDE_AERON_STREAM_ID=1001
-//    -DMDE_BROKER_HOST=\"broker.example.com\"
-//    -DMDE_BROKER_PORT=9876
+//    -DMDE_MARKET_GATEWAY_HOST=\"gateway.example.com\"
+//    -DMDE_MARKET_GATEWAY_PORT=9876
 //
 //  Usage in main.cpp:
 //    mde::AdapterFor_t<kExchange, decltype(fanout)> adapter(fanout);
@@ -100,15 +100,25 @@ inline constexpr std::string_view kUdpIface = MDE_UDP_IFACE;
 inline constexpr std::string_view kAeronChannel  = MDE_AERON_CHANNEL;
 inline constexpr int32_t          kAeronStreamId = MDE_AERON_STREAM_ID;
 
-// ── Broker TCP parameters ─────────────────────────────────────────────────────
+// ── Market-gateway TCP parameters ─────────────────────────────────────────────
+#ifndef MDE_MARKET_GATEWAY_HOST
+#  define MDE_MARKET_GATEWAY_HOST ""
+#endif
+#ifndef MDE_MARKET_GATEWAY_PORT
+#  define MDE_MARKET_GATEWAY_PORT 0
+#endif
+inline constexpr std::string_view kMarketGatewayHost = MDE_MARKET_GATEWAY_HOST;
+inline constexpr uint16_t         kMarketGatewayPort = MDE_MARKET_GATEWAY_PORT;
+
+// Backward compatible aliases.
 #ifndef MDE_BROKER_HOST
-#  define MDE_BROKER_HOST ""
+#  define MDE_BROKER_HOST MDE_MARKET_GATEWAY_HOST
 #endif
 #ifndef MDE_BROKER_PORT
-#  define MDE_BROKER_PORT 0
+#  define MDE_BROKER_PORT MDE_MARKET_GATEWAY_PORT
 #endif
-inline constexpr std::string_view kBrokerHost = MDE_BROKER_HOST;
-inline constexpr uint16_t         kBrokerPort = MDE_BROKER_PORT;
+inline constexpr std::string_view kBrokerHost = kMarketGatewayHost;
+inline constexpr uint16_t         kBrokerPort = kMarketGatewayPort;
 
 // ── Exchange → Adapter trait ──────────────────────────────────────────────────
 //  Primary template – intentionally left undefined.

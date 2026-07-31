@@ -13,17 +13,7 @@
 
 namespace mde {
 
-struct ManualOrder {
-    std::string clientOrderID;
-    std::string symbol;
-    fixer::Side side{fixer::Side::Buy};
-    std::string quantity;
-    fixer::OrderKind kind{fixer::OrderKind::Limit};
-    fixer::TimeInForce timeInForce{fixer::TimeInForce::Day};
-    std::string price;
-};
-
-class BrokerClient {
+class BrokerClient : public StrategyOrderGateway {
 public:
     explicit BrokerClient(StrategyDispatcher& strategies)
         : strategies_(strategies), session_(io_, *this) {}
@@ -50,10 +40,10 @@ public:
         worker_ = std::thread([this] { io_.run(); });
     }
 
-    bool submit(const ManualOrder& order) {
+    bool sendOrder(const SendOrderRequest& order) override {
         if (!connected_)
             return false;
-        auto request = std::make_shared<ManualOrder>(order);
+        auto request = std::make_shared<SendOrderRequest>(order);
         boost::asio::post(io_, [this, request = std::move(request)] {
             auto message = fixer::new_order({
                 request->clientOrderID, request->symbol, request->side, request->quantity,
@@ -63,6 +53,45 @@ public:
         });
         return true;
     }
+
+    bool modifyOrder(const ModifyOrderRequest& request) override {
+        if (!connected_)
+            return false;
+        auto replacement = std::make_shared<ModifyOrderRequest>(request);
+        boost::asio::post(io_, [this, replacement = std::move(replacement)] {
+            auto message = fixer::replace_order(
+                replacement->requestID,
+                replacement->originalClientOrderID,
+                {
+                    replacement->replacement.clientOrderID,
+                    replacement->replacement.symbol,
+                    replacement->replacement.side,
+                    replacement->replacement.quantity,
+                    replacement->replacement.kind,
+                    replacement->replacement.timeInForce,
+                    replacement->replacement.price
+                });
+            session_.send(message);
+        });
+        return true;
+    }
+
+    bool cancelOrder(const CancelOrderRequest& request) override {
+        if (!connected_)
+            return false;
+        auto cancel = std::make_shared<CancelOrderRequest>(request);
+        boost::asio::post(io_, [this, cancel = std::move(cancel)] {
+            auto message = fixer::cancel_order(
+                cancel->requestID,
+                cancel->originalClientOrderID,
+                cancel->symbol,
+                cancel->side);
+            session_.send(message);
+        });
+        return true;
+    }
+
+    bool submit(const SendOrderRequest& order) { return sendOrder(order); }
 
     bool connected() const noexcept { return connected_; }
 

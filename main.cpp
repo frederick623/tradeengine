@@ -48,9 +48,10 @@ static int runFeed(Source&& source) {
     auto                    fanout = mde::FanoutHandler(registry, strategies, logger);
 #ifdef TRADEENGINE_HAVE_FIXER
     mde::BrokerClient       broker(strategies);
+    strategies.bindOrderGateway(&broker);
 
-    if constexpr (!mde::kBrokerHost.empty() && mde::kBrokerPort != 0) {
-        broker.connect(std::string(mde::kBrokerHost), mde::kBrokerPort);
+    if constexpr (!mde::kMarketGatewayHost.empty() && mde::kMarketGatewayPort != 0) {
+        broker.connect(std::string(mde::kMarketGatewayHost), mde::kMarketGatewayPort);
     }
 #endif
 
