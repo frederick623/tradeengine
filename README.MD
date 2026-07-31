@@ -130,6 +130,9 @@ tradeengine/
 ├── marketdata.h          # Exchange-agnostic domain model
 ├── registry.h            # InstrumentRegistry + FanoutHandler
 ├── logginghandler.h      # NanoLog-backed event logger
+├── order/
+│   ├── strategy.h        # Strategy interfaces + dispatcher
+│   └── broker.h          # FIX-backed broker gateway client
 ├── adapter/
 │   ├── base.h            # CRTP adapter base
 │   ├── orderbook.h       # Per-instrument order book map
