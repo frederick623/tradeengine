@@ -126,6 +126,48 @@ struct TestStrategy : mde::Strategy {
     void onOrderStateChange(const mde::BrokerOrderStateEvent&) override { ++orderStates; }
 };
 
+#ifdef TRADEENGINE_HAVE_FIXER
+struct MockOrderGateway : mde::StrategyOrderGateway {
+    int sends{0};
+    int modifies{0};
+    int cancels{0};
+
+    bool sendOrder(const mde::SendOrderRequest&) override { ++sends; return true; }
+    bool modifyOrder(const mde::ModifyOrderRequest&) override { ++modifies; return true; }
+    bool cancelOrder(const mde::CancelOrderRequest&) override { ++cancels; return true; }
+};
+
+struct OrderCapableStrategy : mde::Strategy {
+    bool place() {
+        return sendOrder({
+            .clientOrderID = "c1",
+            .symbol = "TEST",
+            .quantity = "1",
+            .price = "1.00",
+        });
+    }
+    bool amend() {
+        return modifyOrder({
+            .requestID = "c2",
+            .originalClientOrderID = "c1",
+            .replacement = {
+                .clientOrderID = "c2",
+                .symbol = "TEST",
+                .quantity = "2",
+                .price = "1.01",
+            },
+        });
+    }
+    bool cancel() {
+        return cancelOrder({
+            .requestID = "c3",
+            .originalClientOrderID = "c2",
+            .symbol = "TEST",
+        });
+    }
+};
+#endif
+
 } // namespace
 
 // ── HKEX ─────────────────────────────────────────────────────────────────────
@@ -213,6 +255,27 @@ TEST(StrategyDispatcher, PublishesMarketPricesAndBrokerOrderStates) {
     EXPECT_EQ(strategy.prices, 2);
     EXPECT_EQ(strategy.orderStates, 1);
 }
+
+#ifdef TRADEENGINE_HAVE_FIXER
+TEST(StrategyDispatcher, BindsOrderGatewayForStrategies) {
+    mde::StrategyDispatcher dispatcher;
+    MockOrderGateway gateway;
+    OrderCapableStrategy strategy;
+
+    dispatcher.bindOrderGateway(&gateway);
+    dispatcher.add(strategy);
+
+    EXPECT_TRUE(strategy.place());
+    EXPECT_TRUE(strategy.amend());
+    EXPECT_TRUE(strategy.cancel());
+    EXPECT_EQ(gateway.sends, 1);
+    EXPECT_EQ(gateway.modifies, 1);
+    EXPECT_EQ(gateway.cancels, 1);
+
+    dispatcher.remove(strategy);
+    EXPECT_FALSE(strategy.place());
+}
+#endif
 
 int main(int argc, char** argv) {
     nanolog::initialize(nanolog::GuaranteedLogger(), "./log/", "tradeengine_test", 8);

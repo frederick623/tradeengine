@@ -94,6 +94,14 @@ target_link_libraries(testadapter
         GTest::gtest
 )
 
+if(TARGET fixer)
+    target_compile_definitions(testadapter PRIVATE TRADEENGINE_HAVE_FIXER)
+    target_link_libraries(testadapter PRIVATE fixer)
+    if(TARGET Boost::boost)
+        target_link_libraries(testadapter PRIVATE Boost::boost)
+    endif()
+endif()
+
 if(APPLE)
     target_link_libraries(testadapter PRIVATE "-framework CoreFoundation")
 endif()
