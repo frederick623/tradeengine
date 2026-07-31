@@ -15,7 +15,7 @@
 #include "adapter/tse/tseadapter.h"
 #include "registry.h"
 #include "logginghandler.h"
-#include "strategy.h"
+#include "order/strategy.h"
 #include "NanoLog.hpp"
 
 namespace {
@@ -254,6 +254,24 @@ TEST(StrategyDispatcher, PublishesMarketPricesAndBrokerOrderStates) {
 
     EXPECT_EQ(strategy.prices, 2);
     EXPECT_EQ(strategy.orderStates, 1);
+}
+
+TEST(StrategyDispatcher, RemoveStopsMarketAndOrderStateDispatch) {
+    mde::StrategyDispatcher dispatcher;
+    TestStrategy strategy;
+    dispatcher.add(strategy);
+    dispatcher.remove(strategy);
+
+    mde::OrderEvent order;
+    order.kind = mde::OrderEventKind::ADD;
+    order.instrument.symbol = "TEST";
+    order.price = {12345, 2};
+    order.quantity = 10;
+    dispatcher.onOrderEvent(order);
+    dispatcher.publishOrderState({.orderID = "broker-1", .status = "2"});
+
+    EXPECT_EQ(strategy.prices, 0);
+    EXPECT_EQ(strategy.orderStates, 0);
 }
 
 #ifdef TRADEENGINE_HAVE_FIXER

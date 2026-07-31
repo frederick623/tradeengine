@@ -20,9 +20,9 @@
 #include "config.h"
 #include "registry.h"
 #include "logginghandler.h"
-#include "strategy.h"
+#include "order/strategy.h"
 #ifdef TRADEENGINE_HAVE_FIXER
-#include "broker.h"
+#include "order/broker.h"
 #endif
 #include "thirdparty/xdpio/aeron.h"
 #include "feed/textfile.h"
