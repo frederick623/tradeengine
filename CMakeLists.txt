@@ -11,15 +11,15 @@ endif()
 
 add_compile_options(-Wall -Wextra -Wno-unused-parameter)
 
-add_subdirectory(thirdparty)
-
 # ── Optional dependencies for the live / replay packet sources ───────────────
 #  libpcap is optional for pcap replay; Boost.Asio (header-only) enables the
 #  live UDP / multicast connector when present.
 find_path(PCAP_INCLUDE_DIR pcap.h)
 find_library(PCAP_LIBRARY NAMES pcap)
 
-find_package(Boost QUIET)
+find_package(Boost 1.74 QUIET COMPONENTS system)
+
+add_subdirectory(thirdparty)
 
 # ── Feed-handler executable ──────────────────────────────────────────────────
 #  Header-only CRTP adapters live under adapter/; the common model and the
@@ -51,8 +51,9 @@ else()
 endif()
 
 if(Boost_FOUND)
-    target_compile_definitions(tradeengine PRIVATE TRADEENGINE_HAVE_BOOST_ASIO)
+    target_compile_definitions(tradeengine PRIVATE TRADEENGINE_HAVE_BOOST_ASIO TRADEENGINE_HAVE_FIXER)
     target_include_directories(tradeengine PRIVATE ${Boost_INCLUDE_DIRS})
+    target_link_libraries(tradeengine PRIVATE fixer)
     if(TARGET Boost::boost)
         target_link_libraries(tradeengine PRIVATE Boost::boost)
     endif()

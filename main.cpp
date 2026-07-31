@@ -20,6 +20,10 @@
 #include "config.h"
 #include "registry.h"
 #include "logginghandler.h"
+#include "strategy.h"
+#ifdef TRADEENGINE_HAVE_FIXER
+#include "broker.h"
+#endif
 #include "thirdparty/xdpio/aeron.h"
 #include "feed/textfile.h"
 #ifdef TRADEENGINE_HAVE_PCAP
@@ -40,7 +44,15 @@ template<Exchange Exch, class Source>
 static int runFeed(Source&& source) {
     LoggingHandler          logger;
     mde::InstrumentRegistry registry;
-    auto                    fanout = mde::FanoutHandler(registry, logger);
+    mde::StrategyDispatcher strategies;
+    auto                    fanout = mde::FanoutHandler(registry, strategies, logger);
+#ifdef TRADEENGINE_HAVE_FIXER
+    mde::BrokerClient       broker(strategies);
+
+    if constexpr (!mde::kBrokerHost.empty() && mde::kBrokerPort != 0) {
+        broker.connect(std::string(mde::kBrokerHost), mde::kBrokerPort);
+    }
+#endif
 
     mde::AdapterFor_t<Exch, decltype(fanout)> adapter(fanout);
 
