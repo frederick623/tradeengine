@@ -5,7 +5,7 @@
 //  A ready-made MarketDataHandler that writes every event through NanoLog. Useful
 //  as a demo sink for the live feed handler and for visibility inside tests.
 // ─────────────────────────────────────────────────────────────────────────────
-#include "marketdata.h"
+#include "feed/marketdata.h"
 #include "adapter/orderbook.h"
 #include "NanoLog.hpp"
 #include <string>

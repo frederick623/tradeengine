@@ -12,7 +12,7 @@
 //    - translation of decoded messages → normalised mde:: events
 //  It does NOT own networking; the caller feeds raw bytes via processPacket().
 // ─────────────────────────────────────────────────────────────────────────────
-#include "marketdata.h"
+#include "feed/marketdata.h"
 #include <cstddef>
 #include <cstdint>
 

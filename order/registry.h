@@ -1,12 +1,12 @@
 #pragma once
 // ─────────────────────────────────────────────────────────────────────────────
-//  instrumentregistry.h  –  Normalised product catalogue
+//  order/registry.h  –  Normalised product catalogue
 //
 //  The adapter invokes onInstrumentDef / onStrategyDef on its Handler.
 //  InstrumentRegistry is a ready-made Handler implementation that stores them.
 //  The engine (or order book) can query it to get instrument metadata.
 // ─────────────────────────────────────────────────────────────────────────────
-#include "marketdata.h"
+#include "feed/marketdata.h"
 #include <unordered_map>
 #include <mutex>
 #include <tuple>

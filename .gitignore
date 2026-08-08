@@ -8,3 +8,4 @@ CMakeFiles
 Makefile
 cmake-build-debug/
 _deps/
+*.pcap

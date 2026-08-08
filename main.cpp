@@ -18,7 +18,7 @@
 #include <string>
 
 #include "config.h"
-#include "registry.h"
+#include "order/registry.h"
 #include "logginghandler.h"
 #include "order/strategy.h"
 #ifdef TRADEENGINE_HAVE_FIXER

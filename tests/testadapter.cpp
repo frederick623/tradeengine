@@ -10,10 +10,10 @@
 #include <cstring>
 #include <vector>
 
-#include "marketdata.h"
+#include "feed/marketdata.h"
 #include "adapter/hkex/hkexadapter.h"
 #include "adapter/tse/tseadapter.h"
-#include "registry.h"
+#include "order/registry.h"
 #include "logginghandler.h"
 #include "order/strategy.h"
 #include "NanoLog.hpp"

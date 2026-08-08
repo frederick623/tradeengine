@@ -16,8 +16,8 @@ TextFileSource
 
 - **Feed layer** (`feed/`) reads raw UDP payloads from a live socket, a pcap capture, or a hex-text file and pumps them into the adapter via a lock-free MPMC queue on a dedicated reader thread.
 - **Adapter layer** (`adapter/`) decodes wire messages and emits normalised `mde::` events. Each adapter is a CRTP template on its downstream handler — no virtual calls, no heap allocations per message.
-- **Domain model** (`marketdata.h`) defines the exchange-agnostic structs (`InstrumentDef`, `OrderEvent`, `TradeEvent`, …) that every adapter outputs and every handler consumes.
-- **Registry** (`registry.h`) stores the product catalogue populated by instrument-definition events. A compile-time `FanoutHandler` variadic template broadcasts every event to an arbitrary list of handlers simultaneously.
+- **Domain model** (`feed/marketdata.h`) defines the exchange-agnostic structs (`InstrumentDef`, `OrderEvent`, `TradeEvent`, …) that every adapter outputs and every handler consumes.
+- **Registry** (`order/registry.h`) stores the product catalogue populated by instrument-definition events. A compile-time `FanoutHandler` variadic template broadcasts every event to an arbitrary list of handlers simultaneously.
 - **Order books** (`adapter/orderbook.h`) maintain a per-instrument `fastorderbook::OrderBook` updated from normalised `OrderEvent`s, supporting top-of-book and depth queries.
 
 ---
@@ -127,10 +127,15 @@ The bundled `fixer` library provides transport and message primitives only. Prod
 ```
 tradeengine/
 ├── main.cpp              # Entry point — HKEX feed handler
-├── marketdata.h          # Exchange-agnostic domain model
-├── registry.h            # InstrumentRegistry + FanoutHandler
+├── feed/
+│   ├── marketdata.h      # Exchange-agnostic domain model
+│   ├── dispatch.h        # Lock-free threaded pump
+│   ├── udp.h             # Live UDP / multicast source (Boost.Asio)
+│   ├── pcap.h            # pcap/pcapng replay source
+│   └── textfile.h        # Hex-text replay source
 ├── logginghandler.h      # NanoLog-backed event logger
 ├── order/
+│   ├── registry.h        # InstrumentRegistry + FanoutHandler
 │   ├── strategy.h        # Strategy interfaces + dispatcher
 │   └── broker.h          # FIX-backed broker gateway client
 ├── adapter/
@@ -138,11 +143,6 @@ tradeengine/
 │   ├── orderbook.h       # Per-instrument order book map
 │   ├── hkex/             # HKEX OMD-D adapter
 │   └── tse/              # TSE Arrowhead FLEX MBO adapter
-├── feed/
-│   ├── dispatch.h        # Lock-free threaded pump
-│   ├── udp.h             # Live UDP / multicast source (Boost.Asio)
-│   ├── pcap.h            # pcap/pcapng replay source
-│   └── textfile.h        # Hex-text replay source
 ├── thirdparty/
 │   ├── NanoLog/          # Low-latency logging
 │   ├── fastorderbook/    # Price-level order book

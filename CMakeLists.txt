@@ -17,14 +17,14 @@ add_compile_options(-Wall -Wextra -Wno-unused-parameter)
 find_path(PCAP_INCLUDE_DIR pcap.h)
 find_library(PCAP_LIBRARY NAMES pcap)
 
-find_package(Boost 1.74 QUIET COMPONENTS system)
+find_package(Boost REQUIRED CONFIG)
 
 add_subdirectory(thirdparty)
 
 # ── Feed-handler executable ──────────────────────────────────────────────────
-#  Header-only CRTP adapters live under adapter/; the common model and the
-#  registry live at the repo root.  main.cpp drives the HKEX adapter from a
-#  UDP / file / pcap packet source under feed/.
+#  Header-only CRTP adapters live under adapter/; the common model lives under
+#  feed/ and the registry lives under order/.  main.cpp drives the HKEX adapter
+#  from a UDP / file / pcap packet source under feed/.
 add_executable(tradeengine
     main.cpp
 )
